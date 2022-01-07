@@ -1,0 +1,99 @@
+Reset Bottan-------------------
+
+Private Sub cmdReset_Click()
+ Dim msgvalue As VbMsgBoxResult
+  
+  mgsvalue = MsgBox("Do you want to reset the Form?", vbYesNo + vbInformation, "Conformation")
+  
+  If msgvalue = vbNo Then Exit Sub
+
+  Call Reset
+  
+End Sub
+
+Save Botten-----------------------------
+
+
+Private Sub cmdSave_Click()
+  Dim msgvalue As VbMsgBoxResult
+  
+  mgsvalue = MsgBox("Do you want to save the data?", vbYesNo + vbInformation, "Conformation")
+  
+  If msgvalue = vbNo Then Exit Sub
+  
+  Call Submit
+  Call Reset
+  
+End Sub
+
+Initialize form-------------------------------------------------
+
+Private Sub UserForm_Initialize()
+
+ Call Reset
+ 
+End Sub
+
+
+
+Reset code-----------------------------------------------------
+Option Explicit
+ 
+ Sub Reset()
+  
+      Dim iRow As Long
+      iRow = [Counta(Database !A:A)]
+      
+      With frmForm
+          .txtName.value = ""
+          .optMale.value = False
+          .optFemale.value = False
+          .txtCity.value = ""
+          .cmbDeparment.Clear
+          .cmbDeparment.AddItem "HR"
+          .cmbDeparment.AddItem "Qc"
+          
+          .lstDatabase.ColumnCount = 7
+          .lstDatabase.ColumnHeads = True
+          
+          If iRow > 1 Then
+                 .lstDatabase.RowSource = "Database !A2:G" & iRow
+                 
+          Else
+                  .lstDatabase.RowSource = "Database !A2:G2"
+          End If
+      
+      End With
+ 
+ End Sub
+Submitcode-----------------------------------------------------------------------------------------
+
+Sub Submit()
+      
+      Dim sh As Worksheet
+      Dim iRow As Long
+      
+      Set sh = ThisWorkbook.Sheets("Database")
+      iRow = [Counta(Database !A:A)] + 1
+      
+        With sh
+        
+          .Cells(iRow, 1) = iRow - 1
+          .Cells(iRow, 2) = frmForm.txtName.value
+          .Cells(iRow, 3) = IIf(frmForm.optFemale.value = True, "Female", "Male")
+          .Cells(iRow, 4) = frmForm.txtCity.value
+          .Cells(iRow, 5) = frmForm.cmbDeparment.value
+          .Cells(iRow, 6) = Application.UserName
+          .Cells(iRow, 7) = [text(Now(),"DD-MM-YYY HH:MM:SS")]
+       End With
+       
+End Sub
+show data-------------------------------------------------------------------------
+
+Sub Show_Form()
+
+      frmForm.Show
+      
+ End Sub
+
+
