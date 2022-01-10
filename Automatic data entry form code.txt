@@ -1,99 +1,186 @@
-Reset Bottan-------------------
+ Dim isnew As Boolean  'this one true or false that is you search data is old that false new record is true
+ 
+                    
+                    'LOAD SEARCH TOP
+Private Sub loadroll()
 
-Private Sub cmdReset_Click()
- Dim msgvalue As VbMsgBoxResult
+  n = Worksheets("Database").Range("A1").CurrentRegion.Rows.Count
+  txtSearch = Clear
   
-  mgsvalue = MsgBox("Do you want to reset the Form?", vbYesNo + vbInformation, "Conformation")
-  
-  If msgvalue = vbNo Then Exit Sub
-
-  Call Reset
+  For i = 2 To n
+    txtSearch.AddItem Worksheets("Database").Cells(i, 1).Value
+    
+    Next i
   
 End Sub
-
-Save Botten-----------------------------
-
-
-Private Sub cmdSave_Click()
-  Dim msgvalue As VbMsgBoxResult
-  
-  mgsvalue = MsgBox("Do you want to save the data?", vbYesNo + vbInformation, "Conformation")
-  
-  If msgvalue = vbNo Then Exit Sub
-  
-  Call Submit
-  Call Reset
-  
-End Sub
-
-Initialize form-------------------------------------------------
-
-Private Sub UserForm_Initialize()
-
- Call Reset
- 
-End Sub
-
-
-
-Reset code-----------------------------------------------------
-Option Explicit
- 
- Sub Reset()
-  
-      Dim iRow As Long
-      iRow = [Counta(Database !A:A)]
-      
-      With frmForm
-          .txtName.value = ""
-          .optMale.value = False
-          .optFemale.value = False
-          .txtCity.value = ""
-          .cmbDeparment.Clear
-          .cmbDeparment.AddItem "HR"
-          .cmbDeparment.AddItem "Qc"
-          
-          .lstDatabase.ColumnCount = 7
-          .lstDatabase.ColumnHeads = True
-          
-          If iRow > 1 Then
-                 .lstDatabase.RowSource = "Database !A2:G" & iRow
-                 
-          Else
-                  .lstDatabase.RowSource = "Database !A2:G2"
-          End If
-      
-      End With
- 
- End Sub
-Submitcode-----------------------------------------------------------------------------------------
-
-Sub Submit()
-      
-      Dim sh As Worksheet
-      Dim iRow As Long
-      
-      Set sh = ThisWorkbook.Sheets("Database")
-      iRow = [Counta(Database !A:A)] + 1
-      
-        With sh
+                    'SEARCH BOTTEN
+Private Sub cmbSearch_Click()
+'search botten working search show details and only update or delete
+cmtSave.Enabled = False
+'this one before type the record empty
+txtRollNumber.Text = ""
+txtBox.Text = ""
+'check the record txtsearch and database
+n = Worksheets("Database").Range("A1").CurrentRegion.Rows.Count
+For i = 2 To n
+    'if contition match the search box and database roll number
+   If Trim(Worksheets("Database").Cells(i, 1).Value) = Trim(txtSearch.Text) Then
+        txtRollNumber.Text = Worksheets("Database").Cells(i, 1).Value
+        txtBox.Text = Worksheets("Database").Cells(i, 2).Value
+        TextBox1.Text = Worksheets("Database").Cells(i, 3).Value
+        Exit For
         
-          .Cells(iRow, 1) = iRow - 1
-          .Cells(iRow, 2) = frmForm.txtName.value
-          .Cells(iRow, 3) = IIf(frmForm.optFemale.value = True, "Female", "Male")
-          .Cells(iRow, 4) = frmForm.txtCity.value
-          .Cells(iRow, 5) = frmForm.cmbDeparment.value
-          .Cells(iRow, 6) = Application.UserName
-          .Cells(iRow, 7) = [text(Now(),"DD-MM-YYY HH:MM:SS")]
-       End With
+   End If
+   Next i
+   
+   'name box no name dont work,but same is there that time active only save,delete botten
+   If txtBox.Text = "" Then
+   Else
+     cmtUpdate.Enabled = True
+     cmtDelete.Enabled = True
+     
+   End If
+   
+
+End Sub
+
+Private Sub cmtCancel_Click()
+Unload Me
+
+End Sub
+
+                         'DELETE BOTTEN
+Private Sub cmtDelete_Click()
+  n = Worksheets("Database").Range("A1").CurrentRegion.Rows.Count
+  Dim confirm
+  confirm = MsgBox("Are You Sure Delete The Record ?", vbYesNo, "Delete")
+  If (confirm = vbYes) Then
+     For i = 2 To n
+       If Trim(Worksheets("Database").Cells(i, 1).Value) = Trim(txtSearch.Text) Then
+        Worksheets("Database").Range(i & ":" & i).Delete
+        txtRollNumber.Text = ""
+        txtBox.Text = ""
+        TextBox1.Text = ""
+         Call loadroll
+         Exit For
+     End If
+     Next i
+  End If
+       
+  cmtUpdate.Enabled = False
+  cmtDelete.Enabled = False
+  cmtSave.Enabled = True
+  cmtCancel.Enabled = True
+  
        
 End Sub
-show data-------------------------------------------------------------------------
 
-Sub Show_Form()
+                      'CHECK THE VALUES
+Private Sub cmtSave_Click()
 
-      frmForm.Show
-      
+If Trim(txtBox.Text) = "" Then  'unvanted space remove apply trim function
+    MsgBox "enter valide name", vbCritical, "Save" 'name is enmty alart mgs box
+    txtBox.SetFocus 'type curcer retune go to name box
+    Exit Sub
+End If
+
+If Trim(txtRollNumber.Text) = "" Then
+    MsgBox "Please enter RollNumber", vbCritical, "Save"
+    txtRollNumber.SetFocus
+    Exit Sub
+ End If
+ 
+ If Trim(TextBox1.Text) = "" Then
+    MsgBox "Please enter Age", vbCritical, "Save"
+    TextBox1.SetFocus
+    Exit Sub
+ End If
+ 
+isnew = True ' new record save
+Call save
+
+End Sub
+                         'SAVE BOTTEN
+Private Sub save()
+                           ' NEW RECORD SAVE
+'this one new record only save
+ n = Worksheets("Database").Range("A1").CurrentRegion.Rows.Count 'go to worksheet select name of sheet and select range all rows counts
+ 
+ If isnew = True Then
+   With Worksheets("Database").Range("A1") 'select range save name
+     .Offset(n, 0).Value = txtRollNumber.Text
+     .Offset(n, 1).Value = txtBox.Text
+     .Offset(n, 2).Value = TextBox1.Text
+   
+ End With
+                     'SEARCH SAVE THE SAME CELLS
+Else
+      'search the data show same edit your data ofter update same worksheet load the data
+     For i = 2 To n
+        If Trim(Worksheets("Database").Cells(i, 1).Value) = Trim(txtSearch.Text) Then
+          
+           Worksheets("Database").Cells(i, 1).Value = txtRollNumber.Text
+            Worksheets("Database").Cells(i, 2).Value = txtBox.Text
+            Worksheets("Database").Cells(i, 3).Value = TextBox1.Text
+           Exit For
+           
+      End If
+  Next i
+  
+  
+        
+        
+ End If
+ 
+ 
+ txtBox.Text = ""  'next record save ready to empty
+ txtRollNumber.Text = ""
+ TextBox1.Text = ""
+ Call loadroll ' save data ofter load and help of search function
+ 
+ 'ofter update record ready to new record botten
+ cmtSave.Enabled = True
+ cmtDelete.Enabled = False
+ cmtCancel.Enabled = True
+ cmtUpdate.Enabled = False
+ 
+ 
+ 
  End Sub
+                       'UPDATE BOTTEN
+Private Sub cmtUpdate_Click()
+'same comment check the values
+If Trim(txtBox.Text) = "" Then  'unvanted space remove apply trim function
+    MsgBox "enter valide name", vbCritical, "Save" 'name is enmty alart mgs box
+    txtBox.SetFocus 'type curcer retune go to name box
+    Exit Sub
+End If
+
+If Trim(txtRollNumber.Text) = "" Then
+    MsgBox "Please entre RollNumber", vbCritical, "Save"
+    txtRollNumber.SetFocus
+    Exit Sub
+ End If
+ Call save
+
+ 
+End Sub
+
+Private Sub Rollnumber_Click()
+
+End Sub
+
+                        'START FORM
+Private Sub UserForm_Initialize() ' Searchbox roll all number load the diaplay that using load form also load roll number
+Call loadroll
+'first open form only save botten active remain botten not active
+
+cmtUpdate.Enabled = False
+cmtCancel.Enabled = False
+cmtDelete.Enabled = False
+cmtCancel.Enabled = True
+
+isnew = False 'new record is false
 
 
+End Sub
